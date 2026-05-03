@@ -47,13 +47,6 @@
       </div>
       <div style="display:flex;align-items:center;gap:16px;">
         <div class="header-badge">n8n Automation</div>
-        <button class="settings-btn" id="open-settings-btn" aria-label="Settings" title="Webhook Settings"
-          style="background:none;border:none;color:var(--text-2);cursor:pointer;padding:4px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-        </button>
       </div>
     </div>
   </header>
@@ -311,14 +304,6 @@
             <textarea class="form-textarea" id="f-other" rows="3" placeholder="Anything else the AI should know before writing..."></textarea>
           </div>
           <div class="form-group" style="margin-top:8px;">
-            <div style="padding:1px 0 12px;"><div class="form-section-title">n8n Webhook</div></div>
-            <label class="form-label">Webhook URL <span class="req">*</span></label>
-            <div class="webhook-row">
-              <input type="url" class="form-input" id="f-webhook-url" placeholder="https://your-n8n-instance.com/webhook/..." />
-            </div>
-            <span class="form-hint">The production webhook URL from your n8n workflow. Saved in your browser for next time.</span>
-          </div>
-          <div class="form-group" style="margin-top:8px;">
             <div style="padding:1px 0 12px;"><div class="form-section-title">Brief Summary</div></div>
             <div class="review-grid" id="review-grid"></div>
           </div>
@@ -377,25 +362,12 @@
     <p id="loading-subtitle">Posting your brief to the webhook. Please wait.</p>
   </div>
 
-  <!-- ── SETTINGS ── -->
-  <div class="modal-overlay" id="settings-modal" style="display:none;">
-    <div class="modal">
-      <h3>Webhook Settings</h3>
-      <div class="form-group" style="margin-top:20px;">
-        <label class="form-label">n8n Webhook URL</label>
-        <input type="url" class="form-input" id="modal-webhook-input" placeholder="https://your-n8n-instance.com/webhook/..." />
-        <span class="form-hint">Your n8n Webhook trigger URL. Saved in your browser.</span>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-        <button class="btn-ghost" id="close-settings-btn">Cancel</button>
-        <button class="btn-primary" id="save-settings-btn">Save</button>
-      </div>
-    </div>
-  </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
+  const WEBHOOK_URL = 'https://n8n.fueops.com/webhook/content-writing';
+
   let currentStep = 1;
   const TOTAL_STEPS = 5;
   let lastPayload = null;
@@ -413,7 +385,6 @@
     bindRadioGroups();
     bindTagGroups();
     bindConditionals();
-    loadSavedWebhook();
     document.getElementById('start-btn').addEventListener('click', startWizard);
     document.getElementById('prev-btn').addEventListener('click', prevStep);
     document.getElementById('next-btn').addEventListener('click', nextStep);
@@ -421,9 +392,6 @@
     document.getElementById('new-brief-btn').addEventListener('click', resetAll);
     document.getElementById('view-payload-btn').addEventListener('click', togglePayload);
     document.getElementById('copy-payload-btn').addEventListener('click', copyPayload);
-    document.getElementById('open-settings-btn').addEventListener('click', openSettings);
-    document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
-    document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
   });
 
   function buildProgressSteps() {
@@ -523,7 +491,6 @@
         <div class="review-label">${f.label}</div>
         <div class="review-value ${f.val === '—' ? 'empty' : ''}">${f.val || '<span class="empty">not set</span>'}</div>
       </div>`).join('');
-    document.getElementById('f-webhook-url').value = localStorage.getItem('n8n_webhook_url') || '';
   }
 
   function collectFormData() {
@@ -566,15 +533,9 @@
   }
 
   async function handleSubmit() {
-    const webhookUrl  = document.getElementById('f-webhook-url').value.trim();
     const errorBanner = document.getElementById('submit-error');
     errorBanner.classList.remove('visible');
 
-    if (!webhookUrl) {
-      errorBanner.textContent = 'Please enter your n8n webhook URL before submitting.';
-      errorBanner.classList.add('visible');
-      shake('f-webhook-url'); return;
-    }
     if (!document.getElementById('f-topic').value.trim() || !document.getElementById('f-primary-keyword').value.trim()) {
       errorBanner.textContent = 'Topic and Primary Keyword are required (Step 1).';
       errorBanner.classList.add('visible'); return;
@@ -582,7 +543,6 @@
 
     const payload = collectFormData();
     lastPayload = payload;
-    localStorage.setItem('n8n_webhook_url', webhookUrl);
 
     const overlay   = document.getElementById('loading-overlay');
     const loadTitle = document.getElementById('loading-title');
@@ -607,7 +567,7 @@
     try {
       // ── CORS FIX: no Content-Type header → browser sends text/plain (simple
       //    request, no preflight OPTIONS). n8n still receives the full JSON body.
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(WEBHOOK_URL, {
         method: 'POST',
         body:   JSON.stringify(payload),
         signal: controller.signal,
@@ -624,7 +584,7 @@
           localStorage.setItem('articlecraft_result', JSON.stringify(articleData));
           window.location.href = 'result.html';
         } else {
-          showSuccess(webhookUrl);
+          showSuccess();
         }
       } else {
         const text = await response.text().catch(() => '');
@@ -636,18 +596,18 @@
       stageTimers.forEach(clearTimeout);
       overlay.style.display = 'none';
       if (err.name === 'AbortError') {
-        errorBanner.textContent = 'Request timed out after 5 minutes. Check your n8n execution log — the workflow may still be running.';
+        errorBanner.textContent = 'Request timed out after 5 minutes. Check the n8n execution log — the workflow may still be running.';
       } else {
-        errorBanner.textContent = 'Could not reach the webhook: ' + err.message + '. Make sure the workflow is Activated in n8n and the URL is correct.';
+        errorBanner.textContent = 'Could not reach the automation server: ' + err.message + '. Make sure the n8n workflow is Activated.';
       }
       errorBanner.classList.add('visible');
     }
   }
 
-  function showSuccess(webhookUrl) {
+  function showSuccess() {
     document.getElementById('wizard-wrapper').style.display = 'none';
     document.getElementById('success-section').style.display = 'flex';
-    document.getElementById('success-webhook-url').textContent = webhookUrl;
+    document.getElementById('success-webhook-url').textContent = WEBHOOK_URL;
     document.getElementById('payload-display').textContent = JSON.stringify(lastPayload, null, 2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -681,20 +641,6 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function loadSavedWebhook() {
-    document.getElementById('modal-webhook-input').value = localStorage.getItem('n8n_webhook_url') || '';
-  }
-  function openSettings() {
-    document.getElementById('modal-webhook-input').value = localStorage.getItem('n8n_webhook_url') || '';
-    document.getElementById('settings-modal').style.display = 'flex';
-  }
-  function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
-  function saveSettings() {
-    const url = document.getElementById('modal-webhook-input').value.trim();
-    localStorage.setItem('n8n_webhook_url', url);
-    document.getElementById('f-webhook-url').value = url;
-    closeSettings(); showToast('Webhook URL saved.', 'success');
-  }
 
   function countChars(el, counterId, max) {
     const len = el.value.length, counter = document.getElementById(counterId);
