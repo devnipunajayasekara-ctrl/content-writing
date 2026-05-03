@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArticleCraft — Content Brief</title>
+  <meta name="description" content="Fill in your article brief and send it straight to your n8n automation pipeline." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Webhook input row ── */
+    .webhook-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .webhook-row .form-input { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+    /* ── Char counter ── */
+    .char-counter {
+      font-size: 11px;
+      color: var(--text-3);
+      text-align: right;
+      margin-top: 4px;
+    }
+    .char-counter.warn { color: #f59e0b; }
+    .char-counter.over  { color: #ef4444; }
+
+    /* ── Conditional panel ── */
+    .conditional-panel {
+      margin-top: 12px;
+      padding: 16px;
+      background: rgba(139,92,246,0.05);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+    .conditional-panel.visible { display: block; }
+
+    /* ── Review summary ── */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    @media(max-width:560px) { .review-grid { grid-template-columns: 1fr; } }
+    .review-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .review-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 4px;
+    }
+    .review-value {
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .review-value.empty { color: var(--text-3); font-style: italic; }
+
+    /* ── Success state ── */
+    .success-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 16px 60px;
+    }
+    .success-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .success-icon {
+      width: 64px; height: 64px;
+      background: rgba(52,211,153,0.12);
+      border: 1px solid rgba(52,211,153,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 28px;
+    }
+    .success-card h2 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .success-card p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+    .success-detail {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin: 20px 0;
+      font-size: 12.5px;
+      color: var(--text-3);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: left;
+      word-break: break-all;
+    }
+    .success-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Error banner ── */
+    .error-banner {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #fca5a5;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error-banner.visible { display: block; }
+
+    /* ── Required star ── */
+    .req { color: #f87171; margin-left: 2px; }
+
+    /* ── Submit button full-width ── */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      border-radius: var(--radius-sm);
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">ArticleCraft</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div class="header-badge">n8n Automation</div>
+        <button class="settings-btn" id="open-settings-btn" aria-label="Settings" title="Webhook Settings"
+          style="background:none; border:none; color:var(--text-2); cursor:pointer; padding:4px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero" id="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Powered by n8n automation</div>
+      <h1 class="hero-title">Your article brief,<br /><span class="gradient-text">straight to n8n</span></h1>
+      <p class="hero-subtitle">Fill in the 5-step article brief. When you submit, every field is sent as structured JSON to your n8n webhook — ready to trigger your AI content pipeline.</p>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">29</span><span class="stat-label">Intake fields</span></div>
+        <div class="stat-div"></div>
+        <div class="stat"><span class="stat-num">5</span><span class="stat-label">Step wizard</span></div>
+        <div class="stat-div"></div>
+        <div class="stat"><span class="stat-num">1</span><span class="stat-label">Webhook trigger</span></div>
+      </div>
+      <button class="btn-primary btn-xl" id="start-btn">
+        Start Your Brief
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hero-visual">
+      <div class="card-float card-float-1">
+        <div class="cf-dot cf-dot-green"></div>
+        <span>Brief submitted to n8n</span>
+      </div>
+      <div class="card-float card-float-2">
+        <div class="cf-dot cf-dot-purple"></div>
+        <span>AI writing triggered</span>
+      </div>
+      <div class="card-float card-float-3">
+        <div class="cf-dot cf-dot-blue"></div>
+        <span>SEO · AEO · GEO ready</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WIZARD ── -->
+  <main class="wizard-wrapper" id="wizard-wrapper" style="display:none;">
+
+    <div class="progress-header">
+      <div class="progress-steps" id="progress-steps"></div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="wizard-body">
+
+      <!-- ── STEP 1: Article Brief ── -->
+      <div class="step-panel" id="step-1">
+        <h2 class="step-title">Article Brief</h2>
+        <p class="step-desc">Tell me what this article is about, who it's for, and the type of content you need.</p>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label class="form-label">
+              <span class="label-num">1</span>
+              Topic / Working Title <span class="req">*</span>
+            </label>
+            <input type="text" class="form-input" id="f-topic" placeholder="e.g. The Best Hotels in Bali for Couples in 2026" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">
+                <span class="label-num">2</span>
+                Primary Keyword <span class="req">*</span>
+              </label>
+              <input type="text" class="form-input" id="f-primary-keyword" placeholder="e.g. best hotels in bali" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <span class="label-num">7</span>
+                Target Word Count
+              </label>
+              <input type="text" class="form-input" id="f-word-count" placeholder="e.g. 2000 (leave blank = auto)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span class="label-num">3</span>
+              Secondary Keywords / LSI Terms
+            </label>
+            <textarea class="form-textarea" id="f-secondary-keywords" placeholder="e.g. luxury resorts bali, where to stay in bali, bali accommodation guide"></textarea>
+            <span class="form-hint">Comma-separated variations and supporting keywords to weave in.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <span class="label-num">4</span>
+              Target Audience
+            </label>
+            <textarea class="form-textarea" id="f-audience" rows="2" placeholder="e.g. Couples planning a honeymoon in Bali, budget: mid-range to luxury"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">5</span> Search Intent</label>
+            <div class="radio-group" id="rg-intent">
+              <label class="check-row" data-group="intent" data-value="informational">
+                <input type="radio" name="intent" value="informational" />
+                <span class="radio-box"></span>
+                Informational — learn something
+              </label>
+              <label class="check-row" data-group="intent" data-value="navigational">
+                <input type="radio" name="intent" value="navigational" />
+                <span class="radio-box"></span>
+                Navigational — find a specific thing
+              </label>
+              <label class="check-row" data-group="intent" data-value="commercial">
+                <input type="radio" name="intent" value="commercial" />
+                <span class="radio-box"></span>
+                Commercial — compare options before buying
+              </label>
+              <label class="check-row" data-group="intent" data-value="transactional">
+                <input type="radio" name="intent" value="transactional" />
+                <span class="radio-box"></span>
+                Transactional — ready to buy / book now
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">6</span> Article Type</label>
+            <div class="radio-group" id="rg-article-type">
+              <label class="check-row" data-group="article-type" data-value="pillar">
+                <input type="radio" name="article-type" value="pillar" />
+                <span class="radio-box"></span>
+                Pillar / Flagship — comprehensive, 2000+ words
+              </label>
+              <label class="check-row" data-group="article-type" data-value="cluster">
+                <input type="radio" name="article-type" value="cluster" />
+                <span class="radio-box"></span>
+                Cluster / Supporting — focused subtopic, 800–1500 words
+              </label>
+              <label class="check-row" data-group="article-type" data-value="product">
+                <input type="radio" name="article-type" value="product" />
+                <span class="radio-box"></span>
+                Product or Service Page
+              </label>
+              <label class="check-row" data-group="article-type" data-value="listicle">
+                <input type="radio" name="article-type" value="listicle" />
+                <span class="radio-box"></span>
+                Listicle — "Top 10 / Best X for Y"
+              </label>
+              <label class="check-row" data-group="article-type" data-value="how-to">
+                <input type="radio" name="article-type" value="how-to" />
+                <span class="radio-box"></span>
+                How-To Guide
+              </label>
+              <label class="check-row" data-group="article-type" data-value="comparison">
+                <input type="radio" name="article-type" value="comparison" />
+                <span class="radio-box"></span>
+                Comparison — "X vs Y"
+              </label>
+              <label class="check-row" data-group="article-type" data-value="local-seo">
+                <input type="radio" name="article-type" value="local-seo" />
+                <span class="radio-box"></span>
+                Local SEO — city / region-specific
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Brand & Tone ── -->
+      <div class="step-panel" id="step-2">
+        <h2 class="step-title">Brand &amp; Tone</h2>
+        <p class="step-desc">Define the voice, style, and brand context for this article.</p>
+        <div class="form-grid">
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">8</span> Brand / Website Name</label>
+              <input type="text" class="form-input" id="f-brand-name" placeholder="e.g. Wanderlust Hotels" />
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">9</span> Website URL</label>
+              <input type="url" class="form-input" id="f-website-url" placeholder="https://yourbrand.com" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">10</span> Brand Voice — select all that apply</label>
+            <div class="tag-group" id="tg-voice">
+              <span class="tag-chip" data-value="authoritative">Authoritative &amp; Expert</span>
+              <span class="tag-chip" data-value="friendly">Friendly &amp; Conversational</span>
+              <span class="tag-chip" data-value="professional">Professional &amp; Formal</span>
+              <span class="tag-chip" data-value="casual">Casual &amp; Approachable</span>
+              <span class="tag-chip" data-value="bold">Bold &amp; Direct</span>
+              <span class="tag-chip" data-value="empathetic">Empathetic &amp; Supportive</span>
+              <span class="tag-chip" data-value="inspirational">Inspirational</span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">11</span> Words / Phrases to Always Use</label>
+              <textarea class="form-textarea" id="f-always-use" rows="3" placeholder="Brand-specific terms, product names, preferred language..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">12</span> Words / Phrases to Never Use</label>
+              <textarea class="form-textarea" id="f-never-use" rows="3" placeholder="Competitor names, off-brand terms, avoided language..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">13</span> Point of View</label>
+            <div class="radio-group" id="rg-pov">
+              <label class="check-row" data-group="pov" data-value="first-singular">
+                <input type="radio" name="pov" value="first-singular" />
+                <span class="radio-box"></span>
+                First person singular — "I visited, I recommend"
+              </label>
+              <label class="check-row" data-group="pov" data-value="first-plural">
+                <input type="radio" name="pov" value="first-plural" />
+                <span class="radio-box"></span>
+                First person plural — "We offer, our team"
+              </label>
+              <label class="check-row" data-group="pov" data-value="second">
+                <input type="radio" name="pov" value="second" />
+                <span class="radio-box"></span>
+                Second person — "You will find, your next step"
+              </label>
+              <label class="check-row" data-group="pov" data-value="third">
+                <input type="radio" name="pov" value="third" />
+                <span class="radio-box"></span>
+                Third person — "Travelers can expect, guests will find"
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── STEP 3: SEO & Linking ── -->
+      <div class="step-panel" id="step-3">
+        <h2 class="step-title">SEO &amp; Linking</h2>
+        <p class="step-desc">Provide any SEO metadata, linking context, and competitor references you want the article to target.</p>
+        <div class="form-grid">
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">14</span> Target URL / Slug</label>
+              <input type="text" class="form-input" id="f-url-slug" placeholder="/best-hotels-bali" />
+              <span class="form-hint">Leave blank — I'll suggest one.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">15</span> Meta Title</label>
+              <input type="text" class="form-input" id="f-meta-title" placeholder="Max 60 characters" maxlength="80" oninput="countChars(this,'counter-meta-title',60)" />
+              <div class="char-counter" id="counter-meta-title">0 / 60</div>
+              <span class="form-hint">Leave blank — I'll write one.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">16</span> Meta Description</label>
+            <textarea class="form-textarea" id="f-meta-desc" rows="2" placeholder="150–160 character answer-first summary..." maxlength="200" oninput="countChars(this,'counter-meta-desc',160)"></textarea>
+            <div class="char-counter" id="counter-meta-desc">0 / 160</div>
+            <span class="form-hint">Leave blank — I'll write one from the hero answer block.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">17</span> Sitemap / Existing Pages for Internal Linking</label>
+            <textarea class="form-textarea" id="f-sitemap" rows="4" placeholder="https://yoursite.com/sitemap.xml&#10;&#10;or list page titles + URLs:&#10;/bali-travel-guide — Bali Travel Guide&#10;/things-to-do-bali — Things to Do in Bali"></textarea>
+            <span class="form-hint">Write "no sitemap" if unavailable — I'll use [INTERNAL LINK: topic] placeholders instead.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">18</span> External Sources to Cite or Avoid</label>
+            <textarea class="form-textarea" id="f-external-sources" rows="3" placeholder="Cite: WHO.int, Statista, Harvard Business Review&#10;Avoid: competitor-site.com"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">19</span> Competitor Articles to Outperform</label>
+            <textarea class="form-textarea" id="f-competitors" rows="3" placeholder="https://competitor.com/bali-hotels&#10;https://other-site.com/best-bali-resorts"></textarea>
+            <span class="form-hint">Paste 1–3 competitor URLs that rank for your primary keyword.</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Content Specifics ── -->
+      <div class="step-panel" id="step-4">
+        <h2 class="step-title">Content Specifics</h2>
+        <p class="step-desc">Give me the details that make this article unique — what to cover, what to avoid, your angle, and your CTAs.</p>
+        <div class="form-grid">
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">20</span> Key Points to Cover</label>
+              <textarea class="form-textarea" id="f-cover" rows="4" placeholder="Sections, arguments, or information that must appear..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="label-num">21</span> Key Points to Avoid</label>
+              <textarea class="form-textarea" id="f-avoid" rows="4" placeholder="Outdated info, sensitive topics, off-topic sections..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">22</span> Unique Angle / Point of Difference</label>
+            <textarea class="form-textarea" id="f-unique-angle" rows="3" placeholder="e.g. Written by a local expert with 10+ years in Bali hospitality, includes 2026 pricing data from our own research..."></textarea>
+            <span class="form-hint">What makes this article better than every other result on this topic?</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">23</span> Real Data / Stats to Include</label>
+            <textarea class="form-textarea" id="f-real-data" rows="3" placeholder="Proprietary data, case studies, research, or statistics from your brand..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">24</span> Call to Action (CTA)</label>
+            <input type="text" class="form-input" id="f-cta-text" placeholder="e.g. Book a free consultation, Browse our packages, Subscribe" style="margin-bottom:10px;" />
+            <label class="form-label" style="font-weight:500; font-size:12px; color:var(--text-3);">CTA Placement — select all that apply</label>
+            <div class="tag-group" id="tg-cta">
+              <span class="tag-chip" data-value="top">Top</span>
+              <span class="tag-chip" data-value="middle">Middle</span>
+              <span class="tag-chip" data-value="end">End</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">25</span> FAQs to Include</label>
+            <textarea class="form-textarea" id="f-faqs" rows="4" placeholder="List specific FAQ questions you want included.&#10;Leave blank — I'll generate 5+ from People Also Ask patterns for your keyword."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">26</span> Images / Media Notes</label>
+            <textarea class="form-textarea" id="f-media" rows="2" placeholder="Image suggestions, alt text notes, embedded YouTube video URLs..."></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── STEP 5: Final Settings ── -->
+      <div class="step-panel" id="step-5">
+        <h2 class="step-title">Final Settings</h2>
+        <p class="step-desc">Last few options, then we'll send your complete brief to n8n.</p>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">27</span> Include Schema Markup? (JSON-LD)</label>
+            <div class="radio-group" id="rg-schema">
+              <label class="check-row" data-group="schema" data-value="yes">
+                <input type="radio" name="schema" value="yes" />
+                <span class="radio-box"></span>
+                Yes — include FAQPage, Article, and HowTo JSON-LD
+              </label>
+              <label class="check-row" data-group="schema" data-value="no">
+                <input type="radio" name="schema" value="no" />
+                <span class="radio-box"></span>
+                No — skip schema
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">28</span> Updating an Existing Article?</label>
+            <div class="radio-group" id="rg-updating">
+              <label class="check-row" data-group="updating" data-value="no">
+                <input type="radio" name="updating" value="no" />
+                <span class="radio-box"></span>
+                No — this is a new article
+              </label>
+              <label class="check-row" data-group="updating" data-value="yes">
+                <input type="radio" name="updating" value="yes" />
+                <span class="radio-box"></span>
+                Yes — I'm updating / replacing an existing article
+              </label>
+            </div>
+            <div class="conditional-panel" id="panel-existing-article">
+              <div class="form-group">
+                <label class="form-label" style="font-size:12px;">Existing Article URL or Content</label>
+                <textarea class="form-textarea" id="f-existing-article" rows="4" placeholder="Paste the URL or the full existing article content here..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><span class="label-num">29</span> Any Other Instructions?</label>
+            <textarea class="form-textarea" id="f-other" rows="3" placeholder="Anything else the AI should know before writing..."></textarea>
+          </div>
+
+          <!-- Webhook URL -->
+          <div class="form-group" style="margin-top:8px;">
+            <div style="padding:1px 0 12px;">
+              <div class="form-section-title">n8n Webhook</div>
+            </div>
+            <label class="form-label">
+              Webhook URL <span class="req">*</span>
+            </label>
+            <div class="webhook-row">
+              <input type="url" class="form-input" id="f-webhook-url" placeholder="https://your-n8n-instance.com/webhook/..." />
+            </div>
+            <span class="form-hint">The webhook URL from your n8n workflow's Webhook trigger node. Saved in your browser for next time.</span>
+          </div>
+
+          <!-- Review summary -->
+          <div class="form-group" style="margin-top:8px;">
+            <div style="padding:1px 0 12px;">
+              <div class="form-section-title">Brief Summary</div>
+            </div>
+            <div class="review-grid" id="review-grid">
+              <!-- populated by JS on step 5 render -->
+            </div>
+          </div>
+
+          <div class="error-banner" id="submit-error"></div>
+
+          <button class="btn-primary btn-submit" id="submit-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 2L11 13M22 2l-7 19-4-8-8-4 19-7z"/>
+            </svg>
+            Send Brief to n8n
+          </button>
+
+        </div>
+      </div>
+
+    </div><!-- /wizard-body -->
+
+    <div class="wizard-nav">
+      <button class="btn-ghost" id="prev-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back
+      </button>
+      <div class="nav-info" id="nav-info">Step 1 of 5</div>
+      <button class="btn-primary" id="next-btn">
+        Next Step
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ── SUCCESS ── -->
+  <section class="success-section" id="success-section" style="display:none;">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <h2>Brief Sent!</h2>
+      <p>Your article brief has been delivered to your n8n webhook. The automation pipeline should now be running.</p>
+      <div class="success-detail" id="success-webhook-url"></div>
+      <p style="font-size:13px; color:var(--text-3);">Check your n8n execution log to track progress.</p>
+      <div class="success-actions">
+        <button class="btn-primary" id="new-brief-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          New Brief
+        </button>
+        <button class="btn-ghost" id="view-payload-btn">View Submitted JSON</button>
+      </div>
+
+      <!-- collapsible payload viewer -->
+      <div id="payload-viewer" style="display:none; margin-top:20px; text-align:left;">
+        <div class="output-prompt-box">
+          <div class="prompt-label">
+            Submitted Payload
+            <button class="copy-inline-btn" id="copy-payload-btn">Copy JSON</button>
+          </div>
+          <pre class="prompt-content" id="payload-display" style="max-height:320px;"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LOADING OVERLAY ── -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none;">
+    <div class="spinner"></div>
+    <h3 id="loading-title">Sending to n8n...</h3>
+    <p id="loading-subtitle">Posting your brief to the webhook. Please wait.</p>
+  </div>
+
+  <!-- ── SETTINGS MODAL ── -->
+  <div class="modal-overlay" id="settings-modal" style="display:none;">
+    <div class="modal">
+      <h3>Webhook Settings</h3>
+      <div class="form-group" style="margin-top:20px;">
+        <label class="form-label">n8n Webhook URL</label>
+        <input type="url" class="form-input" id="modal-webhook-input" placeholder="https://your-n8n-instance.com/webhook/..." />
+        <span class="form-hint">Your n8n Webhook trigger URL. Saved in your browser.</span>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <button class="btn-ghost" id="close-settings-btn">Cancel</button>
+        <button class="btn-primary" id="save-settings-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let currentStep = 1;
+  const TOTAL_STEPS = 5;
+  let lastPayload = null;
+
+  const STEPS_META = [
+    { label: 'Article Brief' },
+    { label: 'Brand & Tone' },
+    { label: 'SEO & Linking' },
+    { label: 'Content Specifics' },
+    { label: 'Final Settings' },
+  ];
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    buildProgressSteps();
+    bindRadioGroups();
+    bindTagGroups();
+    bindConditionals();
+    loadSavedWebhook();
+
+    document.getElementById('start-btn').addEventListener('click', startWizard);
+    document.getElementById('prev-btn').addEventListener('click', prevStep);
+    document.getElementById('next-btn').addEventListener('click', nextStep);
+    document.getElementById('submit-btn').addEventListener('click', handleSubmit);
+    document.getElementById('new-brief-btn').addEventListener('click', resetAll);
+    document.getElementById('view-payload-btn').addEventListener('click', togglePayload);
+    document.getElementById('copy-payload-btn').addEventListener('click', copyPayload);
+
+    document.getElementById('open-settings-btn').addEventListener('click', openSettings);
+    document.getElementById('close-settings-btn').addEventListener('click', closeSettings);
+    document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+  });
+
+  // ── Progress ───────────────────────────────────────────────────────────────
+  function buildProgressSteps() {
+    const container = document.getElementById('progress-steps');
+    container.innerHTML = STEPS_META.map((s, i) => `
+      <div class="progress-step" id="ps-${i+1}">
+        <div class="step-num">${i+1}</div>
+        <span class="step-label">${s.label}</span>
+      </div>
+    `).join('');
+  }
+
+  function updateProgress() {
+    const fill = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
+    document.getElementById('progress-fill').style.width = fill + '%';
+    document.getElementById('nav-info').textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
+    document.getElementById('prev-btn').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    if (currentStep === TOTAL_STEPS) {
+      nextBtn.style.display = 'none';
+      submitBtn.style.display = 'inline-flex';
+    } else {
+      nextBtn.style.display = 'inline-flex';
+      submitBtn.style.display = 'none';
+    }
+
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const el = document.getElementById(`ps-${i}`);
+      el.classList.remove('active', 'done');
+      if (i < currentStep) el.classList.add('done');
+      else if (i === currentStep) el.classList.add('active');
+    }
+
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`step-${currentStep}`).classList.add('active');
+
+    if (currentStep === TOTAL_STEPS) renderReview();
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  function startWizard() {
+    document.getElementById('hero-section').style.display = 'none';
+    document.getElementById('wizard-wrapper').style.display = 'block';
+    currentStep = 1;
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function prevStep() {
+    if (currentStep > 1) { currentStep--; updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
+
+  function nextStep() {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < TOTAL_STEPS) { currentStep++; updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
+
+  // ── Validation ─────────────────────────────────────────────────────────────
+  function validateStep(step) {
+    if (step === 1) {
+      const topic = document.getElementById('f-topic').value.trim();
+      const kw    = document.getElementById('f-primary-keyword').value.trim();
+      if (!topic) { shake('f-topic'); showToast('Please enter a topic or working title.', 'error'); return false; }
+      if (!kw)    { shake('f-primary-keyword'); showToast('Primary keyword is required.', 'error'); return false; }
+    }
+    return true;
+  }
+
+  // ── Radio Groups ──────────────────────────────────────────────────────────
+  function bindRadioGroups() {
+    document.querySelectorAll('.check-row[data-group]').forEach(row => {
+      row.addEventListener('click', () => {
+        const group = row.dataset.group;
+        const isRadio = row.querySelector('input[type="radio"]');
+        if (isRadio) {
+          document.querySelectorAll(`.check-row[data-group="${group}"]`).forEach(r => r.classList.remove('selected'));
+        }
+        row.classList.toggle('selected');
+        const input = row.querySelector('input');
+        if (input) input.checked = row.classList.contains('selected');
+      });
+    });
+  }
+
+  // ── Tag / Chip Groups ─────────────────────────────────────────────────────
+  function bindTagGroups() {
+    document.querySelectorAll('.tag-chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    });
+  }
+
+  // ── Conditionals ─────────────────────────────────────────────────────────
+  function bindConditionals() {
+    document.querySelectorAll('.check-row[data-group="updating"]').forEach(row => {
+      row.addEventListener('click', () => {
+        const panel = document.getElementById('panel-existing-article');
+        const val = document.querySelector('.check-row[data-group="updating"].selected');
+        panel.classList.toggle('visible', val && val.dataset.value === 'yes');
+      });
+    });
+  }
+
+  // ── Review Summary ─────────────────────────────────────────────────────────
+  function renderReview() {
+    const data = collectFormData();
+    const fields = [
+      { label: 'Topic',           val: data.topic },
+      { label: 'Primary Keyword', val: data.primary_keyword },
+      { label: 'Article Type',    val: data.article_type },
+      { label: 'Search Intent',   val: data.search_intent },
+      { label: 'Word Count',      val: data.word_count || 'Auto' },
+      { label: 'Brand',           val: data.brand_name || '—' },
+      { label: 'Point of View',   val: data.point_of_view || '—' },
+      { label: 'Brand Voice',     val: data.brand_voice.length ? data.brand_voice.join(', ') : '—' },
+    ];
+    document.getElementById('review-grid').innerHTML = fields.map(f => `
+      <div class="review-item">
+        <div class="review-label">${f.label}</div>
+        <div class="review-value ${f.val === '—' ? 'empty' : ''}">${f.val || '<span class="empty">not set</span>'}</div>
+      </div>
+    `).join('');
+
+    // pre-fill webhook URL from saved
+    const saved = localStorage.getItem('n8n_webhook_url') || '';
+    document.getElementById('f-webhook-url').value = saved;
+  }
+
+  // ── Collect Form Data ─────────────────────────────────────────────────────
+  function collectFormData() {
+    const radio = (group) => {
+      const sel = document.querySelector(`.check-row[data-group="${group}"].selected`);
+      return sel ? sel.dataset.value : '';
+    };
+    const tags = (containerId) =>
+      [...document.querySelectorAll(`#${containerId} .tag-chip.selected`)].map(c => c.dataset.value);
+
+    return {
+      topic:                document.getElementById('f-topic').value.trim(),
+      primary_keyword:      document.getElementById('f-primary-keyword').value.trim(),
+      secondary_keywords:   document.getElementById('f-secondary-keywords').value.trim(),
+      target_audience:      document.getElementById('f-audience').value.trim(),
+      search_intent:        radio('intent'),
+      article_type:         radio('article-type'),
+      word_count:           document.getElementById('f-word-count').value.trim(),
+
+      brand_name:           document.getElementById('f-brand-name').value.trim(),
+      website_url:          document.getElementById('f-website-url').value.trim(),
+      brand_voice:          tags('tg-voice'),
+      always_use:           document.getElementById('f-always-use').value.trim(),
+      never_use:            document.getElementById('f-never-use').value.trim(),
+      point_of_view:        radio('pov'),
+
+      url_slug:             document.getElementById('f-url-slug').value.trim(),
+      meta_title:           document.getElementById('f-meta-title').value.trim(),
+      meta_description:     document.getElementById('f-meta-desc').value.trim(),
+      sitemap:              document.getElementById('f-sitemap').value.trim(),
+      external_sources:     document.getElementById('f-external-sources').value.trim(),
+      competitor_urls:      document.getElementById('f-competitors').value.trim(),
+
+      key_points_cover:     document.getElementById('f-cover').value.trim(),
+      key_points_avoid:     document.getElementById('f-avoid').value.trim(),
+      unique_angle:         document.getElementById('f-unique-angle').value.trim(),
+      real_data:            document.getElementById('f-real-data').value.trim(),
+      cta_text:             document.getElementById('f-cta-text').value.trim(),
+      cta_placement:        tags('tg-cta'),
+      faqs:                 document.getElementById('f-faqs').value.trim(),
+      media_notes:          document.getElementById('f-media').value.trim(),
+
+      include_schema:       radio('schema') !== 'no',
+      updating_existing:    radio('updating') === 'yes',
+      existing_article:     document.getElementById('f-existing-article').value.trim(),
+      other_instructions:   document.getElementById('f-other').value.trim(),
+
+      submitted_at:         new Date().toISOString(),
+    };
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  async function handleSubmit() {
+    const webhookUrl = document.getElementById('f-webhook-url').value.trim();
+    const errorBanner = document.getElementById('submit-error');
+
+    errorBanner.classList.remove('visible');
+
+    if (!webhookUrl) {
+      errorBanner.textContent = 'Please enter your n8n webhook URL before submitting.';
+      errorBanner.classList.add('visible');
+      shake('f-webhook-url');
+      return;
+    }
+
+    if (!document.getElementById('f-topic').value.trim() || !document.getElementById('f-primary-keyword').value.trim()) {
+      errorBanner.textContent = 'Topic and Primary Keyword are required (Step 1).';
+      errorBanner.classList.add('visible');
+      return;
+    }
+
+    const payload = collectFormData();
+    lastPayload = payload;
+    localStorage.setItem('n8n_webhook_url', webhookUrl);
+
+    // Show loading overlay with rotating status messages
+    const overlay = document.getElementById('loading-overlay');
+    const loadTitle = document.getElementById('loading-title');
+    const loadSub = document.getElementById('loading-subtitle');
+    overlay.style.display = 'flex';
+    loadTitle.textContent = 'Sending brief to n8n...';
+    loadSub.textContent = 'Connecting to your automation pipeline.';
+
+    const stages = [
+      [4000,  'Writing your article...', 'AI is generating SEO/AEO/GEO structure. This takes 1-2 minutes.'],
+      [30000, 'Still writing...', 'Building headings, answer blocks, FAQ section, and schema markup.'],
+      [60000, 'Humanizing...', 'Running the humanization pass. Almost done.'],
+      [90000, 'Finalizing...', 'Formatting the final article for result.html.'],
+    ];
+    const stageTimers = stages.map(([delay, title, sub]) =>
+      setTimeout(() => { loadTitle.textContent = title; loadSub.textContent = sub; }, delay)
+    );
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5-min hard timeout
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      stageTimers.forEach(clearTimeout);
+      overlay.style.display = 'none';
+
+      if (response.ok || response.status === 200) {
+        let articleData = null;
+        try {
+          articleData = await response.json();
+        } catch (_) {
+          // n8n returned non-JSON — treat as simple success
+        }
+
+        if (articleData && (articleData.article || articleData.output)) {
+          // Store result and redirect to result.html
+          localStorage.setItem('articlecraft_result', JSON.stringify(articleData));
+          window.location.href = 'result.html';
+        } else {
+          // Fallback: show success card without redirect if no article in response
+          showSuccess(webhookUrl);
+        }
+      } else {
+        const text = await response.text().catch(() => '');
+        errorBanner.textContent = 'n8n returned ' + response.status + (text ? ': ' + text.slice(0, 160) : '') + '. Check your workflow and try again.';
+        errorBanner.classList.add('visible');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      stageTimers.forEach(clearTimeout);
+      overlay.style.display = 'none';
+      if (err.name === 'AbortError') {
+        errorBanner.textContent = 'Request timed out after 5 minutes. The n8n workflow may still be running — check your n8n execution log.';
+      } else {
+        errorBanner.textContent = 'Could not reach the webhook: ' + err.message + '. Check the URL and your network connection.';
+      }
+      errorBanner.classList.add('visible');
+    }
+  }
+
+  // ── Success (fallback — used when n8n responds without an article body) ──
+  function showSuccess(webhookUrl) {
+    document.getElementById('wizard-wrapper').style.display = 'none';
+    document.getElementById('success-section').style.display = 'flex';
+    document.getElementById('success-webhook-url').textContent = webhookUrl;
+    document.getElementById('payload-display').textContent = JSON.stringify(lastPayload, null, 2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function togglePayload() {
+    const viewer = document.getElementById('payload-viewer');
+    const btn    = document.getElementById('view-payload-btn');
+    const visible = viewer.style.display !== 'none';
+    viewer.style.display = visible ? 'none' : 'block';
+    btn.textContent = visible ? 'View Submitted JSON' : 'Hide JSON';
+  }
+
+  function copyPayload() {
+    const btn = document.getElementById('copy-payload-btn');
+    navigator.clipboard.writeText(JSON.stringify(lastPayload, null, 2)).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy JSON'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────────────────
+  function resetAll() {
+    document.getElementById('success-section').style.display = 'none';
+    document.getElementById('payload-viewer').style.display = 'none';
+    document.getElementById('hero-section').style.display = 'flex';
+    document.querySelectorAll('.form-input, .form-textarea').forEach(el => el.value = '');
+    document.querySelectorAll('.check-row.selected').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.tag-chip.selected').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.conditional-panel').forEach(el => el.classList.remove('visible'));
+    document.getElementById('submit-error').classList.remove('visible');
+    document.querySelectorAll('.char-counter').forEach(el => { el.textContent = '0 / ' + (el.id.includes('title') ? '60' : '160'); el.className = 'char-counter'; });
+    lastPayload = null;
+    currentStep = 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Webhook Settings Modal ────────────────────────────────────────────────
+  function loadSavedWebhook() {
+    const saved = localStorage.getItem('n8n_webhook_url') || '';
+    document.getElementById('modal-webhook-input').value = saved;
+  }
+
+  function openSettings() {
+    const saved = localStorage.getItem('n8n_webhook_url') || '';
+    document.getElementById('modal-webhook-input').value = saved;
+    document.getElementById('settings-modal').style.display = 'flex';
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-modal').style.display = 'none';
+  }
+
+  function saveSettings() {
+    const url = document.getElementById('modal-webhook-input').value.trim();
+    localStorage.setItem('n8n_webhook_url', url);
+    document.getElementById('f-webhook-url').value = url;
+    closeSettings();
+    showToast('Webhook URL saved.', 'success');
+  }
+
+  // ── Char Counter ──────────────────────────────────────────────────────────
+  function countChars(el, counterId, max) {
+    const len = el.value.length;
+    const counter = document.getElementById(counterId);
+    counter.textContent = `${len} / ${max}`;
+    counter.className = 'char-counter' + (len > max ? ' over' : len > max * 0.85 ? ' warn' : '');
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'error' ? '#ef4444' : 'var(--green)';
+    t.style.color = '#fff';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Shake animation ───────────────────────────────────────────────────────
+  function shake(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.animation = 'none';
+    el.style.borderColor = '#ef4444';
+    el.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.18)';
+    setTimeout(() => {
+      el.style.borderColor = '';
+      el.style.boxShadow = '';
+    }, 2000);
+  }
+  </script>
+</body>
+</html>

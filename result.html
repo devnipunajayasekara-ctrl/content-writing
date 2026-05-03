@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArticleCraft — Your Article is Ready</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* ── Result-specific overrides ── */
+    .result-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 16px 80px;
+    }
+
+    /* ── Status banner ── */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+    .status-banner.success {
+      background: rgba(52,211,153,0.1);
+      border: 1px solid rgba(52,211,153,0.3);
+      color: var(--green);
+    }
+    .status-banner.error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+    .status-banner.loading {
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: var(--purple-light);
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.pulse {
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Article result header ── */
+    .result-header {
+      margin-bottom: 32px;
+    }
+    .result-eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      background: rgba(52,211,153,0.1);
+      border: 1px solid rgba(52,211,153,0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .result-title {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+    .result-sub {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* ── Metadata chips row ── */
+    .meta-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 28px;
+    }
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+    .meta-chip strong { color: var(--text); }
+    .meta-chip-label {
+      color: var(--text-3);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── SEO metadata box ── */
+    .seo-box {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .seo-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .seo-box-header span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .seo-box-header .toggle-icon {
+      color: var(--text-3);
+      transition: transform 0.2s;
+      font-size: 14px;
+    }
+    .seo-box-header.open .toggle-icon { transform: rotate(180deg); }
+    .seo-box-body {
+      display: none;
+      padding: 20px;
+    }
+    .seo-box-body.open { display: block; }
+    .seo-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0;
+    }
+    .seo-row {
+      display: contents;
+    }
+    .seo-key {
+      padding: 8px 12px 8px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+    }
+    .seo-val {
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      word-break: break-word;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Action buttons ── */
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    /* ── Tab-based article viewer ── */
+    .article-viewer {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .viewer-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .v-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-2);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 13px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .v-tab:hover { color: var(--text); }
+    .v-tab.active {
+      color: var(--purple-light);
+      border-bottom-color: var(--purple);
+    }
+    .viewer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar-left {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .viewer-panel { display: none; }
+    .viewer-panel.active { display: block; }
+    .rendered-article {
+      padding: 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15.5px;
+      line-height: 1.85;
+      color: var(--text);
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+    .rendered-article h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; margin: 0.5em 0 0.6em; color: var(--text); }
+    .rendered-article h2 { font-size: 22px; font-weight: 700; margin: 1.6em 0 0.5em; color: var(--text); }
+    .rendered-article h3 { font-size: 17px; font-weight: 600; margin: 1.3em 0 0.4em; color: var(--cyan); }
+    .rendered-article p { margin-bottom: 1em; }
+    .rendered-article ul, .rendered-article ol { padding-left: 22px; margin-bottom: 1.2em; }
+    .rendered-article li { margin-bottom: 0.3em; }
+    .rendered-article table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 14px; }
+    .rendered-article th {
+      background: var(--surface);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .rendered-article td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-2);
+    }
+    .rendered-article tr:last-child td { border-bottom: none; }
+    .rendered-article blockquote {
+      border-left: 3px solid var(--purple);
+      padding: 10px 16px;
+      margin: 1.2em 0;
+      color: var(--text-2);
+      background: rgba(139,92,246,0.05);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-style: italic;
+    }
+    .rendered-article code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--cyan);
+    }
+    .rendered-article pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 1.2em 0;
+    }
+    .rendered-article pre code {
+      background: none;
+      padding: 0;
+      color: var(--text-2);
+    }
+    .raw-panel {
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.75;
+      color: var(--text-2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    /* ── Schema viewer ── */
+    .schema-panel {
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.75;
+      color: var(--text-2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    /* ── Empty / loading state ── */
+    .empty-state {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 16px;
+    }
+    .empty-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+    .empty-card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .empty-card p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    /* ── Word count badge ── */
+    .wc-badge {
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.25);
+      color: var(--purple-light);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--green);
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(52,211,153,0.4);
+      z-index: 999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Responsive ── */
+    @media(max-width: 600px) {
+      .result-actions { flex-direction: column; }
+      .result-actions .btn-primary, .result-actions .btn-ghost { width: 100%; justify-content: center; }
+      .rendered-article { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">ArticleCraft</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="wc-badge" class="wc-badge" style="display:none;"></span>
+        <div class="header-badge">SEO · GEO · AEO · Humanized</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN: populated by JS ── -->
+  <main id="main-content"></main>
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ─────────────────────────────────────────────────────────────────
+  // Constants
+  // ─────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'articlecraft_result';
+
+  // ─────────────────────────────────────────────────────────────────
+  // Entry point
+  // ─────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      renderEmpty();
+      return;
+    }
+    try {
+      const data = JSON.parse(raw);
+      renderResult(data);
+    } catch (e) {
+      renderEmpty('Could not parse the article data. Please go back and generate again.');
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // Render: empty / error state
+  // ─────────────────────────────────────────────────────────────────
+  function renderEmpty(msg) {
+    document.getElementById('main-content').innerHTML = `
+      <section class="empty-state">
+        <div class="empty-card">
+          <div class="empty-icon">✦</div>
+          <h2>No Article Yet</h2>
+          <p>${msg || 'It looks like you haven\'t submitted an article brief yet. Head back to the intake form to get started.'}</p>
+          <a href="intake.html" class="btn-primary" style="text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Go to Intake Form
+          </a>
+        </div>
+      </section>
+    `;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Render: full result
+  // ─────────────────────────────────────────────────────────────────
+  function renderResult(data) {
+    // data shape expected from n8n:
+    // {
+    //   title_tag, meta_description, url_slug, target_keyword,
+    //   secondary_keywords, search_intent, word_count, article_type,
+    //   article,        ← main markdown body
+    //   schema_markup,  ← JSON-LD string (optional)
+    //   internal_links  ← array or string (optional)
+    //   brief           ← original intake brief object (optional)
+    // }
+
+    const article     = data.article || data.output || data.text || '';
+    const titleTag    = data.title_tag || data.titleTag || 'Article';
+    const metaDesc    = data.meta_description || data.metaDescription || '';
+    const urlSlug     = data.url_slug || data.urlSlug || '';
+    const keyword     = data.target_keyword || data.primaryKeyword || data.brief?.primary_keyword || '';
+    const intent      = data.search_intent || data.searchIntent || data.brief?.search_intent || '';
+    const articleType = data.article_type || data.articleType || data.brief?.article_type || '';
+    const wc          = data.word_count || countWords(article);
+    const schema      = data.schema_markup || '';
+    const links       = data.internal_links || '';
+
+    document.title = `ArticleCraft — ${titleTag}`;
+    document.getElementById('wc-badge').textContent = `~${wc.toLocaleString()} words`;
+    document.getElementById('wc-badge').style.display = 'inline-block';
+
+    const seoRowsHTML = buildSEORows({ titleTag, metaDesc, urlSlug, keyword, intent, articleType, wc });
+
+    document.getElementById('main-content').innerHTML = `
+      <div class="result-wrapper">
+
+        <div class="status-banner success">
+          <div class="status-dot" style="background:var(--green);"></div>
+          Article generated and humanized — ready to publish
+        </div>
+
+        <div class="result-header">
+          <div class="result-eyebrow">Your article is ready</div>
+          <h1 class="result-title">${escHtml(titleTag)}</h1>
+          <p class="result-sub">${escHtml(metaDesc)}</p>
+
+          <div class="meta-chips">
+            ${keyword ? `<div class="meta-chip"><span class="meta-chip-label">Keyword</span> <strong>${escHtml(keyword)}</strong></div>` : ''}
+            ${intent  ? `<div class="meta-chip"><span class="meta-chip-label">Intent</span> <strong>${escHtml(intent)}</strong></div>` : ''}
+            ${articleType ? `<div class="meta-chip"><span class="meta-chip-label">Type</span> <strong>${escHtml(articleType)}</strong></div>` : ''}
+            <div class="meta-chip"><span class="meta-chip-label">Words</span> <strong>~${Number(wc).toLocaleString()}</strong></div>
+          </div>
+        </div>
+
+        <!-- SEO metadata collapsible -->
+        <div class="seo-box">
+          <div class="seo-box-header" id="seo-toggle">
+            <span>SEO Metadata</span>
+            <span class="toggle-icon">▼</span>
+          </div>
+          <div class="seo-box-body" id="seo-body">
+            <div class="seo-grid">${seoRowsHTML}</div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="result-actions">
+          <button class="btn-primary" id="copy-article-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy Article
+          </button>
+          <button class="btn-ghost" id="download-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download .md
+          </button>
+          ${schema ? `<button class="btn-ghost" id="copy-schema-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Copy Schema
+          </button>` : ''}
+          <a href="intake.html" class="btn-ghost" style="text-decoration:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            New Brief
+          </a>
+        </div>
+
+        <!-- Article viewer -->
+        <div class="article-viewer">
+          <div class="viewer-tabs">
+            <button class="v-tab active" data-panel="rendered">Rendered Article</button>
+            <button class="v-tab" data-panel="raw">Raw Markdown</button>
+            ${schema ? '<button class="v-tab" data-panel="schema">Schema Markup</button>' : ''}
+            ${links  ? '<button class="v-tab" data-panel="links">Internal Links</button>' : ''}
+          </div>
+          <div class="viewer-toolbar">
+            <span class="toolbar-left" id="toolbar-label">Humanized · SEO/AEO/GEO optimized</span>
+            <button class="copy-inline-btn" id="copy-tab-btn">Copy</button>
+          </div>
+
+          <div class="viewer-panel active" id="panel-rendered">
+            <div class="rendered-article" id="rendered-body"></div>
+          </div>
+          <div class="viewer-panel" id="panel-raw">
+            <div class="raw-panel" id="raw-body"></div>
+          </div>
+          ${schema ? `<div class="viewer-panel" id="panel-schema"><div class="schema-panel" id="schema-body"></div></div>` : ''}
+          ${links  ? `<div class="viewer-panel" id="panel-links"><div class="schema-panel" id="links-body"></div></div>` : ''}
+        </div>
+
+      </div>
+    `;
+
+    // Render markdown
+    document.getElementById('rendered-body').innerHTML = marked.parse(article);
+    document.getElementById('raw-body').textContent    = article;
+    if (schema) document.getElementById('schema-body').textContent = schema;
+    if (links)  document.getElementById('links-body').textContent  = typeof links === 'string' ? links : JSON.stringify(links, null, 2);
+
+    // Bind tabs
+    document.querySelectorAll('.v-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.panel;
+        document.querySelectorAll('.v-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.viewer-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`panel-${target}`).classList.add('active');
+        const labels = { rendered: 'Humanized · SEO/AEO/GEO optimized', raw: 'Raw markdown output', schema: 'JSON-LD schema markup', links: 'Internal links log' };
+        document.getElementById('toolbar-label').textContent = labels[target] || '';
+      });
+    });
+
+    // SEO toggle
+    document.getElementById('seo-toggle').addEventListener('click', () => {
+      const header = document.getElementById('seo-toggle');
+      const body   = document.getElementById('seo-body');
+      header.classList.toggle('open');
+      body.classList.toggle('open');
+    });
+
+    // Copy article
+    document.getElementById('copy-article-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(article).then(() => showToast('Article copied to clipboard'));
+    });
+
+    // Download
+    document.getElementById('download-btn').addEventListener('click', () => {
+      const safe = (titleTag || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const blob = new Blob([article], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safe}.md`;
+      a.click();
+    });
+
+    // Copy schema
+    const schemaBtn = document.getElementById('copy-schema-btn');
+    if (schemaBtn) {
+      schemaBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(schema).then(() => showToast('Schema markup copied'));
+      });
+    }
+
+    // Copy current tab
+    document.getElementById('copy-tab-btn').addEventListener('click', () => {
+      const activePanel = document.querySelector('.viewer-panel.active');
+      const text = activePanel ? (activePanel.querySelector('.rendered-article') ? article : activePanel.querySelector('[id$="-body"]')?.textContent || '') : '';
+      navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────────────────────────
+  function buildSEORows({ titleTag, metaDesc, urlSlug, keyword, intent, articleType, wc }) {
+    const rows = [
+      ['Title Tag', titleTag],
+      ['Meta Description', metaDesc],
+      ['URL Slug', urlSlug],
+      ['Target Keyword', keyword],
+      ['Search Intent', intent],
+      ['Article Type', articleType],
+      ['Word Count', wc ? `~${Number(wc).toLocaleString()} words` : '—'],
+    ];
+    return rows.map(([k, v]) => v ? `
+      <div class="seo-row">
+        <div class="seo-key">${k}</div>
+        <div class="seo-val">${escHtml(String(v))}</div>
+      </div>` : '').join('');
+  }
+
+  function countWords(text) {
+    if (!text) return 0;
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+  </script>
+</body>
+</html>
